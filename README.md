@@ -21,6 +21,8 @@ In Pure Pursuit, the interceptor steers so its velocity vector continuously alig
 
 The simulations support live 2D telemetry visualization using [Rerun](https://rerun.io).
 
+![Rerun 2D Simulation](screenshot.png)
+
 ### Setup (Virtual Environment)
 ```bash
 # Activate virtual environment
