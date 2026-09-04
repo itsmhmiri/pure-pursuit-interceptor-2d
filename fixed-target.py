@@ -40,6 +40,6 @@ if __name__ == '__main__':
     d = missile.distance(target)
     while d >= hit_radius:
         d = missile.step(target, dt)
-        print(f"distance: {d:.4f}  |  step: {t:.4f}")
+        print(f"distance: {d:.4f}  |  tick: {t:.2f}")
         t += dt
-    print(f"Target got intercepted in {t//dt}")
+    print(f"Target got intercepted in {t//dt} steps")
