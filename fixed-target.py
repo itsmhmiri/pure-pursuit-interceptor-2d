@@ -1,4 +1,6 @@
+import argparse
 import math
+from visualizer import SimVisualizer
 
 class Target:
     def __init__(self, x:float, y:float):
@@ -32,14 +34,26 @@ class Missile:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="2D Pure Pursuit: Fixed Target")
+    parser.add_argument("--web", action="store_true", help="Launch Rerun web viewer (recommended for WSL/browser)")
+    parser.add_argument("--no-viz", action="store_true", help="Disable Rerun visualizer")
+    args = parser.parse_args()
+
     dt = 0.01
     target = Target(300, 400)
     missile = Missile(0, 0, 100)
     hit_radius = 1.0
     t = 0.0
     d = missile.distance(target)
+
+    viz = SimVisualizer("1_fixed_target", web=args.web, enabled=not args.no_viz)
+
     while d >= hit_radius:
         d = missile.step(target, dt)
-        print(f"distance: {d:.4f}  |  tick: {t:.2f}")
+        hit = d < hit_radius
+        viz.log_step(t, missile, target, d, hit=hit)
+        print(f"distance: {d:.4f}  |  step: {t:.4f}")
         t += dt
-    print(f"Target got intercepted in {t//dt} steps")
+
+    print(f"Target got intercepted in {int(t // dt)} steps)")
+    viz.finish()

@@ -17,22 +17,47 @@ In Pure Pursuit, the interceptor steers so its velocity vector continuously alig
 
 ---
 
+## Visualization & Telemetry (Rerun)
+
+The simulations support live 2D telemetry visualization using [Rerun](https://rerun.io).
+
+### Setup (Virtual Environment)
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Install Rerun SDK
+pip install rerun-sdk
+```
+
+---
+
 ## How to Run
 
-Zero external dependencies required (pure standard library Python 3):
+### 1. Interactive Visualization (Recommended for WSL on Windows 11)
+Use the `--web` flag to open the hardware-accelerated Rerun viewer directly in your Windows browser (at `http://localhost:9090`):
 
 ```bash
-# 1. Fixed target
-python3 fixed-target.py
+# Stage 1: Fixed target
+python3 fixed-target.py --web
 
-# 2. Moving target
-python3 moving-target.py
+# Stage 2: Moving target
+python3 moving-target.py --web
 
-# 3. Constrained turn-rate missile
-python3 constrained-missile.py
+# Stage 3: Constrained turn-rate missile
+python3 constrained-missile.py --web
 
-# 4. Maneuvering target & turn-constrained missile
-python3 maneuvering-target.py
+# Stage 4: Maneuvering target & turn-constrained missile
+python3 maneuvering-target.py --web
+```
+
+> **WSL Note:** If you have WSLg enabled, omitting `--web` will launch the native desktop window. `--web` streams directly to your Windows browser without requiring X11/Wayland display setup.
+
+### 2. Console-Only Mode
+If you prefer running without visualization, you can add `--no-viz` (or run without `rerun-sdk` installed):
+
+```bash
+python3 maneuvering-target.py --no-viz
 ```
 
 There are some simple tests written in each file, you can either just use them, play with their values or even make your own tests!

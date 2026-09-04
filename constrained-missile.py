@@ -1,4 +1,6 @@
+import argparse
 import math
+from visualizer import SimVisualizer
 
 class MovingTarget:
     def __init__(self, x:float, y:float, vx:float, vy:float):
@@ -49,6 +51,11 @@ class ConstrainedMissile:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="2D Pure Pursuit: Constrained Missile")
+    parser.add_argument("--web", action="store_true", help="Launch Rerun web viewer (recommended for WSL/browser)")
+    parser.add_argument("--no-viz", action="store_true", help="Disable Rerun visualizer")
+    args = parser.parse_args()
+
     dt = 0.01
     target = MovingTarget(1200, 500, 80, -20)
     missile = ConstrainedMissile(0, 0, 200, 30)
@@ -56,15 +63,23 @@ if __name__ == '__main__':
     t = 0.0
     hit = False
 
+    viz = SimVisualizer("3_constrained_missile", web=args.web, enabled=not args.no_viz)
+
     while t < 15.00:
         target.step(dt)
         d = missile.step(target, dt)
+        extra = {
+            "missile_heading_deg": math.degrees(missile.heading_deg),
+        }
         if d < hit_radius:
             hit = True
-            print(f"Target got intercepted in {t//dt} steps")
+            viz.log_step(t, missile, target, d, hit=True, extra_telemetry=extra)
+            print(f"Target got intercepted in {int(t // dt)} steps ({t:.2f}s)")
             break
+        viz.log_step(t, missile, target, d, hit=False, extra_telemetry=extra)
         print(f"distance: {d:.4f}  |  tick: {t:.2f}  |  missile angle: {math.degrees(missile.heading_deg):.2f}")
         t += dt
     
     if not hit:
         print("target was not intercepted")
+    viz.finish()

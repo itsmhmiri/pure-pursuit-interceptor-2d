@@ -1,4 +1,6 @@
+import argparse
 import math
+from visualizer import SimVisualizer
 
 class ManeuveringTarget:
     def __init__(self, x: float, y: float, base_vx: float, base_vy: float):
@@ -6,14 +8,15 @@ class ManeuveringTarget:
         self.y = y
         self.base_vx = base_vx
         self.base_vy = base_vy
+        self.vy_evasive = base_vy
         self.time = 0.0
 
     def step(self, dt: float):
         self.time += dt
-        vy_evasive = self.base_vy + 60.0 * math.sin(1.5 * self.time)
+        self.vy_evasive = self.base_vy + 60.0 * math.sin(1.5 * self.time)
         
         self.x += self.base_vx * dt
-        self.y += vy_evasive * dt
+        self.y += self.vy_evasive * dt
 
 class ConstrainedMissile:
     def __init__(self, x:float, y:float, speed:float, max_turn_deg:float = 30):
@@ -23,11 +26,11 @@ class ConstrainedMissile:
         self.heading_deg = 0.0
         self.max_turn_deg = math.radians(max_turn_deg)
 
-    def distance(self, target:MovingTarget) -> float:
+    def distance(self, target:ManeuveringTarget) -> float:
         # calculating the distance between target and interceptor
         return math.hypot((target.x -self.x), (target.y - self.y))
 
-    def step(self, target:MovingTarget, dt:float) -> float:
+    def step(self, target:ManeuveringTarget, dt:float) -> float:
         dx = target.x - self.x
         dy = target.y - self.y
         
@@ -53,26 +56,39 @@ class ConstrainedMissile:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="2D Pure Pursuit: Maneuvering Target")
+    parser.add_argument("--web", action="store_true", help="Launch Rerun web viewer (recommended for WSL/browser)")
+    parser.add_argument("--no-viz", action="store_true", help="Disable Rerun visualizer")
+    args = parser.parse_args()
+
     dt = 0.01
     target = ManeuveringTarget(500, 1000, 100, 20)
     missile = ConstrainedMissile(0, 0, 250, 35)
     t = 0.0
     hit = False
     hit_radius = 2.0
-
     min_d = float("inf")
+
+    viz = SimVisualizer("4_maneuvering_target", web=args.web, enabled=not args.no_viz)
 
     while t < 15.00:
         target.step(dt)
         d = missile.step(target, dt)
         if d < min_d:
             min_d = d
+        extra = {
+            "missile_heading_deg": math.degrees(missile.heading_deg),
+            "target_vy": target.vy_evasive,
+        }
         if d < hit_radius:
             hit = True
-            print(f"Target got intercepted in {t//dt} steps")
+            viz.log_step(t, missile, target, d, hit=True, extra_telemetry=extra)
+            print(f"Target got intercepted in {int(t // dt)} steps ({t:.2f}s)")
             break
+        viz.log_step(t, missile, target, d, hit=False, extra_telemetry=extra)
         print(f"distance: {d:.4f}  |  tick: {t:.2f}  |  missile angle: {math.degrees(missile.heading_deg):.2f}")
         t += dt
     
     if not hit:
         print(f"target was not intercepted and the closest distance was {min_d:.4f}")
+    viz.finish()
